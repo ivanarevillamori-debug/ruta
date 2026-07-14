@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raíces del Perú · Ruta del Viajero</title>
+<style>
+  :root{
+    --noche: #1B2A41;
+    --oro: #D4A017;
+    --barro: #B5482C;
+    --verde: #5C7A5C;
+    --arena: #EFE6D8;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: var(--noche);
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(212,160,23,0.08), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(181,72,44,0.10), transparent 45%);
+    color: var(--arena);
+    font-family:'Georgia','Iowan Old Style',serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .contenedor{
+    width:100%;
+    max-width: 820px;
+    background: linear-gradient(180deg,#22334C,#1B2A41);
+    border-radius:18px;
+    border:1px solid rgba(212,160,23,0.25);
+    box-shadow:0 20px 60px rgba(0,0,0,0.45);
+    overflow:hidden;
+  }
+
+  header{
+    padding:26px 32px 16px;
+    text-align:center;
+    border-bottom:1px solid rgba(212,160,23,0.2);
+  }
+  .eyebrow{
+    font-family:'Trebuchet MS',sans-serif;
+    letter-spacing:3px;
+    font-size:11px;
+    text-transform:uppercase;
+    color:var(--oro);
+    opacity:.85;
+  }
+  h1{ font-size:28px; margin-top:6px; }
+  .sub{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:13px;
+    color:#B7AD98;
+    margin-top:8px;
+  }
+
+  .franja{ height:6px; display:flex; }
+  .franja span{ flex:1; }
+  .franja .c{ background:var(--barro); }
+  .franja .s{ background:var(--oro); }
+  .franja .sel{ background:var(--verde); }
+
+  main{ padding:28px 32px 32px; }
+
+  /* --- camino --- */
+  .camino-wrap{
+    position:relative;
+    width:100%;
+    padding-bottom: 34.6%; /* aspect ratio 800x260 aprox, con margen para nodos */
+    margin-bottom: 26px;
+  }
+  .camino-svg-fondo{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+  .nodo{
+    position:absolute;
+    width:18px; height:18px;
+    border-radius:50%;
+    background: rgba(255,255,255,0.15);
+    border:2px solid rgba(212,160,23,0.4);
+    transform: translate(-50%,-50%);
+    transition: all .4s ease;
+  }
+  .nodo.visitado{
+    background: var(--oro);
+    border-color: var(--oro);
+    box-shadow: 0 0 10px rgba(212,160,23,0.6);
+  }
+  .nodo.actual{
+    background: var(--verde);
+    border-color: var(--verde);
+    box-shadow: 0 0 12px rgba(92,122,92,0.8);
+    width:22px; height:22px;
+  }
+  .viajero{
+    position:absolute;
+    font-size:26px;
+    transform: translate(-50%,-70%);
+    transition: left .6s ease, top .6s ease;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    z-index:5;
+  }
+
+  /* --- tarjeta de destino --- */
+  .tarjeta-destino{
+    background: rgba(239,230,216,0.06);
+    border-left: 4px solid var(--verde);
+    border-radius:8px;
+    padding:18px 20px;
+    margin-bottom:20px;
+  }
+  .tarjeta-destino .num{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color: var(--oro);
+    margin-bottom:6px;
+  }
+  .tarjeta-destino h3{ font-size:20px; margin-bottom:8px; }
+  .tarjeta-destino p{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:14px;
+    color:#D9CFBB;
+    line-height:1.55;
+  }
+
+  .pregunta{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:14px;
+    font-weight:700;
+    margin-bottom:12px;
+    color: var(--arena);
+  }
+
+  .opciones{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .opcion{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    padding:13px 10px;
+    border-radius:10px;
+    border:1.5px solid rgba(212,160,23,0.3);
+    background: rgba(255,255,255,0.03);
+    color: var(--arena);
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .opcion:hover:not(:disabled){
+    border-color: var(--oro);
+    background: rgba(212,160,23,0.1);
+  }
+  .opcion:disabled{ cursor:default; }
+  .opcion.correcta{ background: var(--verde); border-color:var(--verde); color:#fff; }
+  .opcion.incorrecta{ background: var(--barro); border-color:var(--barro); color:#fff; }
+
+  .continuar{
+    display:none;
+    margin-top:18px;
+    width:100%;
+    font-family:'Trebuchet MS',sans-serif;
+    font-weight:700;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    background: var(--oro);
+    color:var(--noche);
+    cursor:pointer;
+  }
+
+  #final{ display:none; text-align:center; }
+  #final .medalla{ font-size:52px; margin-bottom:8px; }
+  #final h2{ font-size:24px; margin-bottom:8px; }
+  #final p{ font-family:'Trebuchet MS',sans-serif; color:#D9CFBB; font-size:14px; margin-bottom:24px; }
+  #reiniciar{
+    width:100%;
+    font-family:'Trebuchet MS',sans-serif;
+    font-weight:700;
+    padding:14px;
+    border-radius:10px;
+    border:2px solid var(--oro);
+    background:transparent;
+    color:var(--oro);
+    cursor:pointer;
+  }
+  #reiniciar:hover{ background:var(--oro); color:var(--noche); }
+
+  @media (max-width:600px){
+    main{ padding:22px 18px 26px; }
+    header{ padding:22px 20px 16px; }
+    h1{ font-size:22px; }
+    .opciones{ grid-template-columns:1fr; }
+    .viajero{ font-size:20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+  <header>
+    <div class="eyebrow">Raíces del Perú</div>
+    <h1>La Ruta del Viajero</h1>
+    <div class="sub">Guía al viajero a través del tiempo, de la cultura más antigua a la más reciente</div>
+  </header>
+  <div class="franja"><span class="c"></span><span class="s"></span><span class="sel"></span></div>
+
+  <main>
+    <div id="juego">
+      <div class="camino-wrap">
+        <svg class="camino-svg-fondo" viewBox="0 0 800 260" preserveAspectRatio="none">
+          <polyline id="linea-camino" points=""
+            fill="none" stroke="rgba(212,160,23,0.25)" stroke-width="3" stroke-dasharray="2 10" stroke-linecap="round"/>
+        </svg>
+        <div id="nodos"></div>
+        <div class="viajero" id="viajero">🦙</div>
+      </div>
+
+      <div class="tarjeta-destino">
+        <div class="num" id="destino-num"></div>
+        <h3 id="destino-nombre"></h3>
+        <p id="destino-clue"></p>
+      </div>
+
+      <div id="zona-pregunta">
+        <div class="pregunta">¿Cuál es el siguiente destino en la ruta del tiempo?</div>
+        <div class="opciones" id="opciones"></div>
+        <button class="continuar" id="continuar">Continuar viaje →</button>
+      </div>
+    </div>
+
+    <div id="final">
+      <div class="medalla">🏔️</div>
+      <h2>¡Has completado la Ruta del Viajero!</h2>
+      <p id="resumen-final"></p>
+      <button id="reiniciar">Volver a empezar la ruta</button>
+    </div>
+  </main>
+</div>
+
+<script>
+const ruta = [
+  {n:"Caral", p:"El poblado más antiguo de América, con pirámides construidas hace más de 5,000 años, sin cerámica ni evidencia de guerra."},
+  {n:"Chavín", p:"Levantó un templo en forma de U con el Lanzón Monolítico en su interior; se le considera una cultura matriz de los Andes."},
+  {n:"Paracas", p:"Es famosa por sus finísimos textiles bordados y por las momias conservadas gracias al clima seco del desierto sureño."},
+  {n:"Mochica o Moche", p:"Se distinguió por su cerámica realista (huaco-retrato) y por las pirámides del Sol y la Luna."},
+  {n:"Nazca", p:"Es célebre por las enormes líneas y figuras trazadas en el desierto, visibles sobre todo desde el aire."},
+  {n:"Tiahuanaco o Tiwanaku", p:"Construyó la famosa Puerta del Sol, cerca del lago Titicaca."},
+  {n:"Wari", p:"Formó el primer gran imperio expansivo de los Andes, con capital cerca de la actual Ayacucho."},
+  {n:"Chimú", p:"Construyó Chan Chan, la ciudadela de barro más grande de la América precolombina."},
+  {n:"Chachapoyas", p:"Llamados 'los guerreros de las nubes', construyeron la fortaleza de Kuélap en la sierra nororiental."},
+  {n:"Inca", p:"Formó el imperio más extenso de la América precolombina, con el Cusco como capital."}
+];
+
+// Coordenadas del camino (en un viewBox de 800x260), en porcentaje
+const coords = [
+  {x:5,  y:57.7},
+  {x:15, y:34.6},
+  {x:25, y:69.2},
+  {x:35, y:38.5},
+  {x:45, y:73.1},
+  {x:55, y:38.5},
+  {x:65, y:73.1},
+  {x:75, y:38.5},
+  {x:85, y:69.2},
+  {x:95, y:42.3}
+];
+
+let indiceActual = 0; // índice del destino donde YA está el viajero
+const nodosEl = document.getElementById('nodos');
+const viajeroEl = document.getElementById('viajero');
+const lineaCamino = document.getElementById('linea-camino');
+const destinoNum = document.getElementById('destino-num');
+const destinoNombre = document.getElementById('destino-nombre');
+const destinoClue = document.getElementById('destino-clue');
+const opcionesEl = document.getElementById('opciones');
+const continuarBtn = document.getElementById('continuar');
+const juegoDiv = document.getElementById('juego');
+const finalDiv = document.getElementById('final');
+
+function mezclar(arr){
+  return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]);
+}
+
+function inicializarCamino(){
+  lineaCamino.setAttribute('points', coords.map(c=>`${c.x*8},${c.y*2.6}`).join(' '));
+  nodosEl.innerHTML='';
+  coords.forEach((c,i)=>{
+    const n = document.createElement('div');
+    n.className='nodo';
+    n.style.left = c.x+'%';
+    n.style.top = c.y+'%';
+    n.id = 'nodo-'+i;
+    nodosEl.appendChild(n);
+  });
+}
+
+function actualizarVisual(){
+  coords.forEach((c,i)=>{
+    const n = document.getElementById('nodo-'+i);
+    n.classList.remove('visitado','actual');
+    if(i < indiceActual) n.classList.add('visitado');
+    if(i === indiceActual) n.classList.add('actual');
+  });
+  const pos = coords[indiceActual];
+  viajeroEl.style.left = pos.x+'%';
+  viajeroEl.style.top = pos.y+'%';
+}
+
+function mostrarDestinoActual(){
+  const d = ruta[indiceActual];
+  destinoNum.textContent = `Parada ${indiceActual+1} de ${ruta.length}`;
+  destinoNombre.textContent = d.n;
+  destinoClue.textContent = d.p;
+
+  if(indiceActual === ruta.length-1){
+    // último destino alcanzado: mostrar final
+    document.getElementById('zona-pregunta').style.display='none';
+    setTimeout(mostrarFinal, 900);
+    return;
+  }
+
+  document.getElementById('zona-pregunta').style.display='block';
+  prepararPregunta();
+}
+
+function prepararPregunta(){
+  const correcta = ruta[indiceActual+1].n;
+  const candidatos = ruta.filter((r,i)=> i !== indiceActual+1 && i > indiceActual -1 ? true : false);
+  // distractores: cualquier destino que no sea el correcto (de toda la ruta, evitando duplicar nombre)
+  let pool = ruta.filter(r => r.n !== correcta).map(r=>r.n);
+  pool = mezclar(pool).slice(0,3);
+  const opciones = mezclar([correcta, ...pool]);
+
+  opcionesEl.innerHTML='';
+  continuarBtn.style.display='none';
+
+  opciones.forEach(op=>{
+    const b = document.createElement('button');
+    b.className='opcion';
+    b.textContent = op;
+    b.addEventListener('click', ()=> responder(b, op, correcta));
+    opcionesEl.appendChild(b);
+  });
+}
+
+function responder(boton, elegido, correcta){
+  document.querySelectorAll('.opcion').forEach(b=>{
+    b.disabled = true;
+    if(b.textContent === correcta) b.classList.add('correcta');
+  });
+  if(elegido !== correcta){
+    boton.classList.add('incorrecta');
+  }
+  continuarBtn.style.display='block';
+}
+
+continuarBtn.addEventListener('click', ()=>{
+  indiceActual++;
+  actualizarVisual();
+  mostrarDestinoActual();
+});
+
+function mostrarFinal(){
+  juegoDiv.style.display='none';
+  finalDiv.style.display='block';
+  document.getElementById('resumen-final').textContent =
+    `El viajero recorrió ${ruta.length} culturas, desde Caral hasta el Imperio Inca, atravesando más de 4,000 años de historia.`;
+}
+
+document.getElementById('reiniciar').addEventListener('click', ()=>{
+  indiceActual = 0;
+  juegoDiv.style.display='block';
+  finalDiv.style.display='none';
+  actualizarVisual();
+  mostrarDestinoActual();
+});
+
+// inicio
+inicializarCamino();
+actualizarVisual();
+mostrarDestinoActual();
+</script>
+
+</body>
+</html>
